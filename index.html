@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="tr">
   <head>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Okuma Anlama Test Sistemi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JavaScript SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <!-- Supabase Configuration -->
     <script src="supabase-config.js"></script>
     <style>
@@ -6811,86 +6811,7 @@
         );
       }
 
-      // Supabase yapılandırması - Bu değerleri kendi Supabase bilgilerinizle değiştirin
-      const SUPABASE_URL = 'https://klbgkxnwnbxqxtvxfshe.supabase.co'; // Örnek: 'https://your-project.supabase.co'
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsYmdreG53bmJ4cXh0dnhmc2hlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2MzM1ODAsImV4cCI6MjA3MjIwOTU4MH0.nababKyMKhOxgb-zP8R_Ho1GaCBW3fprc1_BKk7H4oE'; // Supabase projenizden alacağınız anon key
 
-      // Supabase client'ını başlat (sadece geçerli URL ve key varsa)
-      let supabase = null;
-      if (SUPABASE_URL !== 'YOUR_SUPABASE_URL_HERE' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY_HERE') {
-          supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      }
-
-      // LocalStorage'dan Supabase'e veri taşıma fonksiyonu
-      async function verileriSupabaseeTasi() {
-          try {
-              console.log('🔄 LocalStorage verilerini Supabase\'e taşıma işlemi başlatılıyor...');
-              
-              // Supabase client kontrolü
-              if (!supabase) {
-                  console.log('⚠️ Supabase yapılandırması tamamlanmamış. SUPABASE_URL ve SUPABASE_ANON_KEY değerlerini güncelleyin.');
-                  return;
-              }
-              
-              // LocalStorage'dan veriyi al
-              const localStorageData = localStorage.getItem('yapilacaklar');
-              
-              // Eğer veri yoksa işlemi sonlandır
-              if (!localStorageData) {
-                  console.log('ℹ️ LocalStorage\'da taşınacak veri bulunamadı.');
-                  return;
-              }
-              
-              // JSON string'ini JavaScript dizisine çevir
-              let yapilacaklarDizisi;
-              try {
-                  yapilacaklarDizisi = JSON.parse(localStorageData);
-              } catch (parseError) {
-                  console.error('❌ LocalStorage verisi JSON formatında değil:', parseError);
-                  return;
-              }
-              
-              // Dizi kontrolü
-              if (!Array.isArray(yapilacaklarDizisi)) {
-                  console.error('❌ LocalStorage verisi dizi formatında değil');
-                  return;
-              }
-              
-              // Eğer dizi boşsa işlemi sonlandır
-              if (yapilacaklarDizisi.length === 0) {
-                  console.log('ℹ️ LocalStorage\'da taşınacak veri dizisi boş.');
-                  return;
-              }
-              
-              console.log(`📊 ${yapilacaklarDizisi.length} adet veri Supabase'e aktarılacak...`);
-              
-              // Supabase'e veri ekleme işlemi
-              const { data, error } = await supabase
-                  .from('tasks')
-                  .insert(yapilacaklarDizisi);
-              
-              // Hata kontrolü
-              if (error) {
-                  console.error('❌ Supabase\'e veri ekleme hatası:', error);
-                  return;
-              }
-              
-              // Başarılı işlem
-              console.log('✅ Veriler başarıyla Supabase\'e aktarıldı!');
-              console.log('📋 Aktarılan veri sayısı:', yapilacaklarDizisi.length);
-              
-              // LocalStorage'ı temizle
-              localStorage.removeItem('yapilacaklar');
-              console.log('🧹 LocalStorage temizlendi.');
-              
-              // Kullanıcıya bilgi ver (isteğe bağlı)
-              if (typeof window !== 'undefined' && window.alert) {
-                  alert(`✅ ${yapilacaklarDizisi.length} adet veri başarıyla Supabase'e aktarıldı ve LocalStorage temizlendi!`);
-              }
-              
-          } catch (error) {
-              console.error('❌ Veri taşıma işleminde beklenmeyen hata:', error);
-          }
       }
 
       // Initialize the application when page loads
@@ -6936,3 +6857,4 @@
     </script>
   </body>
 </html>
+
