@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JavaScript SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase Configuration -->
+    <script src="supabase-config.js"></script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
       body {
@@ -125,6 +127,12 @@
             </p>
           </div>
           <div class="flex gap-3">
+            <button
+              onclick="showSupabaseConfig()"
+              class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              🔧 Supabase Ayarları
+            </button>
             <button
               onclick="showDataManagement()"
               class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -1067,6 +1075,93 @@
           </div>
         </div>
       </div>
+
+      <!-- Supabase Configuration Modal -->
+      <div
+        id="supabaseConfigModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      >
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div class="text-center mb-6">
+            <div class="text-4xl mb-2">🔧</div>
+            <h3 class="text-xl font-bold text-gray-800">Supabase Konfigürasyonu</h3>
+            <p class="text-sm text-gray-600 mt-2">
+              Veritabanı bağlantısı için Supabase bilgilerinizi girin
+            </p>
+          </div>
+
+          <div
+            id="supabaseError"
+            class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4"
+          >
+            <div class="flex items-center">
+              <span class="text-red-500 mr-2">⚠️</span>
+              <span id="supabaseErrorMessage"></span>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >🔗 Supabase URL</label
+              >
+              <input
+                type="url"
+                id="supabaseUrl"
+                placeholder="https://your-project.supabase.co"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >🔑 Anon Key</label
+              >
+              <input
+                type="password"
+                id="supabaseAnonKey"
+                placeholder="Supabase Anon Key"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          <div class="mt-6 space-y-3">
+            <button
+              onclick="testSupabaseConnection()"
+              class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+            >
+              🔍 Bağlantıyı Test Et
+            </button>
+            <button
+              onclick="saveSupabaseConfig()"
+              class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+            >
+              💾 Kaydet ve Devam Et
+            </button>
+            <button
+              onclick="hideSupabaseConfig()"
+              class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+            >
+              ❌ İptal
+            </button>
+          </div>
+
+          <div class="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
+            <div class="flex items-center text-blue-700">
+              <span class="mr-2">💡</span>
+              <span
+                ><strong>Bilgi:</strong> Supabase bilgilerinizi Supabase Dashboard'dan alabilirsiniz.</span
+              >
+            </div>
+            <div class="mt-2 text-blue-600 text-xs">
+              <p>1. Supabase projenize gidin</p>
+              <p>2. Settings > API menüsünden URL ve Anon Key'i kopyalayın</p>
+              <p>3. Veritabanı tablolarının oluşturulduğundan emin olun</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -1082,6 +1177,14 @@
       let questionTimer = null; // Timer for current question
       let questionTimeLeft = 120; // 120 seconds per question
       let questionStartTime = null; // Track when question started
+      
+      // Supabase configuration
+      let isSupabaseConfigured = false;
+      let useSupabase = false; // Flag to determine whether to use Supabase or localStorage
+      
+      // Teacher session management
+      let teacherSessionToken = null;
+      
       let students = [
         {
           name: 'Ahmet Yılmaz',
@@ -1349,32 +1452,325 @@
 
       // Auto-save function
       function autoSave() {
-        saveDataToStorage();
+        if (useSupabase) {
+          // Supabase auto-saves data automatically
+          console.log('Supabase otomatik kaydetme aktif');
+        } else {
+          saveDataToStorage();
+        }
+      }
+
+      // Teacher session management functions
+      function saveTeacherSession(username, sessionToken = null) {
+        const sessionData = {
+          username: username,
+          loginTime: Date.now(),
+          sessionToken: sessionToken,
+          isLoggedIn: true
+        };
+        
+        localStorage.setItem('teacherSession', JSON.stringify(sessionData));
+        teacherSessionToken = sessionToken;
+        isTeacherLoggedIn = true;
+      }
+
+      function loadTeacherSession() {
+        try {
+          const sessionData = localStorage.getItem('teacherSession');
+          if (sessionData) {
+            const session = JSON.parse(sessionData);
+            
+            // Check if session is still valid (24 hours)
+            const sessionAge = Date.now() - session.loginTime;
+            const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+            
+            if (sessionAge < maxAge && session.isLoggedIn) {
+              teacherSessionToken = session.sessionToken;
+              isTeacherLoggedIn = true;
+              return session;
+            } else {
+              // Session expired
+              clearTeacherSession();
+            }
+          }
+        } catch (error) {
+          console.error('Öğretmen oturum yükleme hatası:', error);
+          clearTeacherSession();
+        }
+        return null;
+      }
+
+      function clearTeacherSession() {
+        localStorage.removeItem('teacherSession');
+        teacherSessionToken = null;
+        isTeacherLoggedIn = false;
+      }
+
+      async function validateTeacherSession() {
+        if (useSupabase && isSupabaseConfigured && teacherSessionToken) {
+          try {
+            const sessionData = await SupabaseHelper.teachers.validateSession(teacherSessionToken);
+            if (sessionData) {
+              isTeacherLoggedIn = true;
+              return true;
+            }
+          } catch (error) {
+            console.error('Supabase oturum doğrulama hatası:', error);
+            clearTeacherSession();
+          }
+        }
+        return false;
+      }
+
+      // Supabase Configuration Functions
+      function showSupabaseConfig() {
+        document.getElementById('supabaseConfigModal').classList.remove('hidden');
+        
+        // Load saved config if exists
+        const savedConfig = localStorage.getItem('supabaseConfig');
+        if (savedConfig) {
+          const config = JSON.parse(savedConfig);
+          document.getElementById('supabaseUrl').value = config.url || '';
+          document.getElementById('supabaseAnonKey').value = config.anonKey || '';
+        }
+      }
+
+      function hideSupabaseConfig() {
+        document.getElementById('supabaseConfigModal').classList.add('hidden');
+        hideSupabaseError();
+      }
+
+      function showSupabaseError(message) {
+        const errorDiv = document.getElementById('supabaseError');
+        const errorMessage = document.getElementById('supabaseErrorMessage');
+        errorMessage.textContent = message;
+        errorDiv.classList.remove('hidden');
+      }
+
+      function hideSupabaseError() {
+        document.getElementById('supabaseError').classList.add('hidden');
+      }
+
+      async function testSupabaseConnection() {
+        const url = document.getElementById('supabaseUrl').value.trim();
+        const anonKey = document.getElementById('supabaseAnonKey').value.trim();
+
+        if (!url || !anonKey) {
+          showSupabaseError('Lütfen URL ve Anon Key alanlarını doldurun!');
+          return;
+        }
+
+        try {
+          hideSupabaseError();
+          
+          // Initialize Supabase client
+          const success = initializeSupabase(url, anonKey);
+          if (!success) {
+            showSupabaseError('Supabase client başlatılamadı!');
+            return;
+          }
+
+          // Test connection
+          await checkSupabaseConnection();
+          
+          alert('✅ Supabase bağlantısı başarılı!\n\nVeritabanı tablolarına erişim sağlandı.');
+          
+        } catch (error) {
+          console.error('Supabase bağlantı hatası:', error);
+          showSupabaseError('Bağlantı hatası: ' + error.message);
+        }
+      }
+
+      async function saveSupabaseConfig() {
+        const url = document.getElementById('supabaseUrl').value.trim();
+        const anonKey = document.getElementById('supabaseAnonKey').value.trim();
+
+        if (!url || !anonKey) {
+          showSupabaseError('Lütfen URL ve Anon Key alanlarını doldurun!');
+          return;
+        }
+
+        try {
+          hideSupabaseError();
+          
+          // Test connection first
+          const success = initializeSupabase(url, anonKey);
+          if (!success) {
+            showSupabaseError('Supabase client başlatılamadı!');
+            return;
+          }
+
+          await checkSupabaseConnection();
+          
+          // Save configuration
+          const config = { url, anonKey };
+          localStorage.setItem('supabaseConfig', JSON.stringify(config));
+          
+          // Set flags
+          isSupabaseConfigured = true;
+          useSupabase = true;
+          
+          hideSupabaseConfig();
+          
+          alert('✅ Supabase konfigürasyonu kaydedildi!\n\nArtık veriler Supabase veritabanında saklanacak.');
+          
+          // Migrate existing data if any
+          await migrateLocalDataToSupabase();
+          
+        } catch (error) {
+          console.error('Supabase konfigürasyon hatası:', error);
+          showSupabaseError('Konfigürasyon hatası: ' + error.message);
+        }
+      }
+
+      async function loadSupabaseConfig() {
+        const savedConfig = localStorage.getItem('supabaseConfig');
+        if (savedConfig) {
+          try {
+            const config = JSON.parse(savedConfig);
+            const success = initializeSupabase(config.url, config.anonKey);
+            if (success) {
+              await checkSupabaseConnection();
+              isSupabaseConfigured = true;
+              useSupabase = true;
+              console.log('✅ Supabase konfigürasyonu yüklendi');
+              return true;
+            }
+          } catch (error) {
+            console.error('Supabase konfigürasyon yükleme hatası:', error);
+          }
+        }
+        return false;
+      }
+
+      async function migrateLocalDataToSupabase() {
+        if (!useSupabase || !isSupabaseConfigured) return;
+        
+        try {
+          console.log('LocalStorage verilerini Supabase\'e taşıma başlıyor...');
+          
+          // Migrate students
+          for (const student of students) {
+            try {
+              await SupabaseHelper.students.create({
+                name: student.name,
+                student_number: student.studentNumber,
+                tc_number: student.tcNumber
+              });
+            } catch (error) {
+              // Ignore duplicate errors
+              if (!error.message.includes('duplicate')) {
+                console.error('Öğrenci taşıma hatası:', error);
+              }
+            }
+          }
+          
+          // Migrate tests
+          for (const test of tests) {
+            try {
+              await SupabaseHelper.tests.create({
+                id: test.id,
+                title: test.title,
+                text: test.text,
+                text_display_mode: test.textDisplayMode || 'withQuestions',
+                questions: test.questions
+              });
+            } catch (error) {
+              if (!error.message.includes('duplicate')) {
+                console.error('Test taşıma hatası:', error);
+              }
+            }
+          }
+          
+          console.log('✅ Veri taşıma tamamlandı');
+          
+        } catch (error) {
+          console.error('Veri taşıma hatası:', error);
+        }
       }
 
       // Initialize the application
-      function init() {
-        // Try to load saved data first
-        const dataLoaded = loadDataFromStorage();
-
-        if (!dataLoaded) {
-          // If no saved data, generate sample data
-          generateSampleTest();
-          initializeStudentProfiles();
+      async function init() {
+        // First try to load Supabase configuration
+        const supabaseLoaded = await loadSupabaseConfig();
+        
+        // Check for existing teacher session
+        const teacherSession = loadTeacherSession();
+        if (teacherSession) {
+          console.log('👨‍🏫 Öğretmen oturumu bulundu:', teacherSession.username);
+          
+          // Validate session if using Supabase
+          if (useSupabase && isSupabaseConfigured) {
+            const isValid = await validateTeacherSession();
+            if (!isValid) {
+              console.log('❌ Supabase oturum geçersiz, temizleniyor');
+              clearTeacherSession();
+            }
+          }
+        }
+        
+        if (supabaseLoaded) {
+          console.log('🔗 Supabase bağlantısı aktif');
+          // Load data from Supabase if configured
+          try {
+            await loadDataFromSupabase();
+          } catch (error) {
+            console.error('Supabase veri yükleme hatası:', error);
+            // Fallback to localStorage
+            loadDataFromStorage();
+          }
+        } else {
+          // Try to load saved data from localStorage
+          const dataLoaded = loadDataFromStorage();
+          
+          if (!dataLoaded) {
+            // If no saved data, generate sample data
+            generateSampleTest();
+            initializeStudentProfiles();
+          }
         }
 
-        showUserSelection();
+        // Show appropriate panel based on session
+        if (isTeacherLoggedIn) {
+          console.log('🔓 Öğretmen oturumu aktif, panele yönlendiriliyor');
+          showTeacherPanel();
+        } else {
+          showUserSelection();
+        }
+        
         populateStudentSelects();
 
         // Set up auto-save every 30 seconds
         setInterval(autoSave, 30000);
 
         // Save data when page is about to unload
-        window.addEventListener('beforeunload', saveDataToStorage);
+        window.addEventListener('beforeunload', () => {
+          if (useSupabase) {
+            // Supabase handles this automatically
+            console.log('Supabase otomatik kaydetme');
+          } else {
+            saveDataToStorage();
+          }
+        });
 
         // Show data status
-        if (dataLoaded) {
-          console.log('💾 Kaydedilmiş veriler yüklendi!');
+        if (supabaseLoaded) {
+          console.log('🔗 Supabase verileri yüklendi!');
+          setTimeout(() => {
+            const notification = document.createElement('div');
+            notification.className =
+              'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            notification.innerHTML = '🔗 Supabase bağlantısı aktif!';
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+              if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+              }
+            }, 3000);
+          }, 1000);
+        } else {
+          console.log('💾 LocalStorage kullanılıyor');
           setTimeout(() => {
             if (students.length > 0 || tests.length > 0) {
               const notification = document.createElement('div');
@@ -1390,6 +1786,79 @@
               }, 3000);
             }
           }, 1000);
+        }
+
+        // Show session status if teacher is logged in
+        if (isTeacherLoggedIn && teacherSession) {
+          setTimeout(() => {
+            const notification = document.createElement('div');
+            notification.className =
+              'fixed top-4 left-4 bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            notification.innerHTML = `👨‍🏫 Hoş geldiniz, ${teacherSession.username}!`;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+              if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+              }
+            }, 4000);
+          }, 1500);
+        }
+      }
+
+      // Load data from Supabase
+      async function loadDataFromSupabase() {
+        if (!useSupabase || !isSupabaseConfigured) return false;
+        
+        try {
+          // Load students
+          const supabaseStudents = await SupabaseHelper.students.getAll();
+          students.length = 0; // Clear existing
+          students.push(...supabaseStudents.map(s => ({
+            name: s.name,
+            studentNumber: s.student_number,
+            tcNumber: s.tc_number,
+            id: s.id
+          })));
+          
+          // Load tests
+          const supabaseTests = await SupabaseHelper.tests.getAll();
+          tests.length = 0; // Clear existing
+          tests.push(...supabaseTests.map(t => ({
+            id: t.id,
+            title: t.title,
+            text: t.text,
+            textDisplayMode: t.text_display_mode,
+            questions: t.questions
+          })));
+          
+          // Load test results
+          const supabaseResults = await SupabaseHelper.testResults.getAll();
+          Object.keys(testResults).forEach(key => delete testResults[key]); // Clear existing
+          
+          supabaseResults.forEach(result => {
+            const studentName = result.students.name;
+            if (!testResults[studentName]) {
+              testResults[studentName] = [];
+            }
+            testResults[studentName].push({
+              testId: result.test_id,
+              testTitle: result.tests.title,
+              assigned: result.assigned,
+              completed: result.completed,
+              score: result.score,
+              answers: result.answers,
+              stars: result.stars,
+              points: result.points
+            });
+          });
+          
+          console.log('✅ Supabase veriler yüklendi');
+          return true;
+          
+        } catch (error) {
+          console.error('Supabase veri yükleme hatası:', error);
+          throw error;
         }
       }
 
@@ -2560,22 +3029,43 @@
         currentTest = test;
       }
 
-      function saveTest() {
+      async function saveTest() {
         if (currentTest) {
-          tests.push(currentTest);
+          try {
+            if (useSupabase && isSupabaseConfigured) {
+              // Save to Supabase
+              const supabaseTest = await SupabaseHelper.tests.create({
+                title: currentTest.title,
+                text: currentTest.text,
+                text_display_mode: currentTest.textDisplayMode || 'withQuestions',
+                questions: currentTest.questions
+              });
+              
+              // Add ID to local test object
+              currentTest.id = supabaseTest.id;
+              
+            } else {
+              // Auto-save data to localStorage
+              saveDataToStorage();
+            }
 
-          // Auto-save data
-          saveDataToStorage();
+            // Add to local array
+            tests.push(currentTest);
 
-          alert('Test başarıyla kaydedildi! ✅');
-          document.getElementById('testPreview').classList.add('hidden');
-          document.getElementById('textTitle').value = '';
-          document.getElementById('textContent').value = '';
-          currentTest = null;
+            alert('Test başarıyla kaydedildi! ✅');
+            document.getElementById('testPreview').classList.add('hidden');
+            document.getElementById('textTitle').value = '';
+            document.getElementById('textContent').value = '';
+            currentTest = null;
 
-          // Update displays
-          populateTestSelect();
-          updateStats();
+            // Update displays
+            populateTestSelect();
+            updateStats();
+            
+          } catch (error) {
+            console.error('Test kaydetme hatası:', error);
+            alert('Test kaydedilirken bir hata oluştu: ' + error.message);
+          }
         }
       }
 
@@ -2637,7 +3127,7 @@
         }
       }
 
-      function addStudent() {
+      async function addStudent() {
         const name = document.getElementById('newStudentName').value.trim();
         const surname = document
           .getElementById('newStudentSurname')
@@ -2681,34 +3171,67 @@
           tcNumber: tcNumber,
         };
 
-        students.push(newStudent);
+        try {
+          if (useSupabase && isSupabaseConfigured) {
+            // Save to Supabase
+            const supabaseStudent = await SupabaseHelper.students.create({
+              name: fullName,
+              student_number: studentNumber,
+              tc_number: tcNumber
+            });
+            
+            // Add ID to local student object
+            newStudent.id = supabaseStudent.id;
+            
+            // Initialize student profile in Supabase
+            await SupabaseHelper.studentProfiles.create({
+              student_id: supabaseStudent.id,
+              total_points: 0,
+              badges: [],
+              tests_completed: 0,
+              tests_with_high_score: 0,
+              fast_completions: 0,
+              retake_successes: 0,
+              average_stars: 0,
+              total_stars: 0
+            });
+            
+          } else {
+            // Initialize student profile for localStorage
+            if (!studentProfiles[fullName]) {
+              studentProfiles[fullName] = {
+                totalPoints: 0,
+                badges: [],
+                testsCompleted: 0,
+                testsWithHighScore: 0,
+                fastCompletions: 0,
+                retakeSuccesses: 0,
+                averageStars: 0,
+                totalStars: 0,
+              };
+            }
+            
+            // Auto-save data to localStorage
+            saveDataToStorage();
+          }
 
-        // Initialize student profile
-        if (!studentProfiles[fullName]) {
-          studentProfiles[fullName] = {
-            totalPoints: 0,
-            badges: [],
-            testsCompleted: 0,
-            testsWithHighScore: 0,
-            fastCompletions: 0,
-            retakeSuccesses: 0,
-            averageStars: 0,
-            totalStars: 0,
-          };
+          // Add to local array
+          students.push(newStudent);
+
+          // Clear form
+          document.getElementById('newStudentName').value = '';
+          document.getElementById('newStudentSurname').value = '';
+          document.getElementById('newStudentTC').value = '';
+          document.getElementById('newStudentNumber').value = '';
+
+          populateStudentList();
+          populateStudentSelects();
+          alert(`${fullName} başarıyla eklendi! ✅`);
+          
+        } catch (error) {
+          console.error('Öğrenci ekleme hatası:', error);
+          alert('Öğrenci eklenirken bir hata oluştu: ' + error.message);
         }
-
-        // Auto-save data
-        saveDataToStorage();
-
-        // Clear form
-        document.getElementById('newStudentName').value = '';
-        document.getElementById('newStudentSurname').value = '';
-        document.getElementById('newStudentTC').value = '';
-        document.getElementById('newStudentNumber').value = '';
-
-        populateStudentList();
-        populateStudentSelects();
-        alert(`${fullName} başarıyla eklendi! ✅`);
       }
 
       function editStudent(index) {
@@ -3294,7 +3817,7 @@
         }
       }
 
-      function assignTest() {
+      async function assignTest() {
         const testId = document.getElementById('testSelect').value;
         const studentIndex = document.getElementById('studentSelect').value;
 
@@ -3326,19 +3849,39 @@
           return;
         }
 
-        testResults[student.name].push({
+        const newAssignment = {
           testId: testId,
           testTitle: test.title,
           assigned: true,
           completed: false,
           score: null,
-        });
+        };
 
-        // Auto-save data
-        saveDataToStorage();
+        try {
+          if (useSupabase && isSupabaseConfigured && student.id) {
+            // Save to Supabase
+            const supabaseResult = await SupabaseHelper.testResults.assignTest(
+              student.id,
+              testId
+            );
+            
+            // Add Supabase ID to local assignment
+            newAssignment.supabaseId = supabaseResult.id;
+          } else {
+            // Auto-save data to localStorage
+            saveDataToStorage();
+          }
 
-        alert(`${test.title} testi ${student.name} adlı öğrenciye atandı! ✅`);
-        updateStats();
+          // Add to local array
+          testResults[student.name].push(newAssignment);
+
+          alert(`${test.title} testi ${student.name} adlı öğrenciye atandı! ✅`);
+          updateStats();
+          
+        } catch (error) {
+          console.error('Test atama hatası:', error);
+          alert('Test atanırken bir hata oluştu: ' + error.message);
+        }
       }
 
       // Student functions
@@ -4079,7 +4622,7 @@
         }
       }
 
-      function submitTest() {
+      async function submitTest() {
         console.log('submitTest called');
         console.log('studentAnswers:', studentAnswers);
         console.log('currentTest:', currentTest);
@@ -4140,19 +4683,69 @@
 
           if (testResultIndex !== -1) {
             console.log('Updating existing test result');
-            studentTestResults[testResultIndex].completed = true;
-            studentTestResults[testResultIndex].score =
-              detailedResult.percentage;
-            studentTestResults[testResultIndex].points =
-              detailedResult.totalPoints;
-            studentTestResults[testResultIndex].stars = getStarsForScore(
-              detailedResult.percentage
-            );
-            studentTestResults[testResultIndex].answers = { ...studentAnswers };
-            studentTestResults[testResultIndex].details = detailedResult;
-            studentTestResults[testResultIndex].duration = testDuration;
-            studentTestResults[testResultIndex].isRetake = isRetake;
-            studentTestResults[testResultIndex].completedAt = Date.now();
+            const updatedResult = {
+              completed: true,
+              score: detailedResult.percentage,
+              points: detailedResult.totalPoints,
+              stars: getStarsForScore(detailedResult.percentage),
+              answers: { ...studentAnswers },
+              details: detailedResult,
+              duration: testDuration,
+              isRetake: isRetake,
+              completedAt: Date.now()
+            };
+
+            // Update local array
+            Object.assign(studentTestResults[testResultIndex], updatedResult);
+
+            // Update in Supabase if configured
+            if (useSupabase && isSupabaseConfigured) {
+              try {
+                // Find student ID
+                const student = students.find(s => s.name === currentUser);
+                if (student && student.id) {
+                  // Update test result in Supabase
+                  await SupabaseHelper.testResults.update(
+                    studentTestResults[testResultIndex].supabaseId, // We'll need to store this
+                    {
+                      completed: true,
+                      score: detailedResult.percentage,
+                      answers: studentAnswers,
+                      stars: getStarsForScore(detailedResult.percentage),
+                      points: detailedResult.totalPoints,
+                      test_duration: testDuration
+                    }
+                  );
+
+                  // Update student profile in Supabase
+                  const newBadges = updateStudentProfile(
+                    currentUser,
+                    detailedResult,
+                    testDuration,
+                    isRetake
+                  );
+
+                  // Update profile in Supabase
+                  const profile = studentProfiles[currentUser];
+                  if (profile) {
+                    await SupabaseHelper.studentProfiles.update(student.id, {
+                      total_points: profile.totalPoints,
+                      badges: profile.badges,
+                      tests_completed: profile.testsCompleted,
+                      tests_with_high_score: profile.testsWithHighScore,
+                      fast_completions: profile.fastCompletions,
+                      retake_successes: profile.retakeSuccesses,
+                      average_stars: profile.averageStars,
+                      total_stars: profile.totalStars
+                    });
+                  }
+                }
+              } catch (supabaseError) {
+                console.error('Supabase güncelleme hatası:', supabaseError);
+                // Continue with localStorage fallback
+              }
+            }
+
             console.log('Test result updated successfully');
           } else {
             console.error('Test result not found for update');
@@ -4162,19 +4755,21 @@
             return;
           }
 
-          // Update student profile and check for badges
-          const newBadges = updateStudentProfile(
-            currentUser,
-            detailedResult,
-            testDuration,
-            isRetake
-          );
-
-          // Auto-save data
-          saveDataToStorage();
+          // Update student profile and check for badges (for localStorage)
+          if (!useSupabase || !isSupabaseConfigured) {
+            const newBadges = updateStudentProfile(
+              currentUser,
+              detailedResult,
+              testDuration,
+              isRetake
+            );
+            
+            // Auto-save data to localStorage
+            saveDataToStorage();
+          }
 
           // Show test results
-          displayTestResults(detailedResult, passed, newBadges, testDuration);
+          displayTestResults(detailedResult, passed, [], testDuration);
         } catch (error) {
           console.error('Error in submitTest:', error);
           alert(
@@ -4628,7 +5223,7 @@
         hideLoginError();
       }
 
-      function teacherLogin() {
+      async function teacherLogin() {
         const username = document
           .getElementById('teacherUsername')
           .value.trim();
@@ -4648,73 +5243,122 @@
           return;
         }
 
-        // Verify credentials
-        if (
-          username === teacherCredentials.username &&
-          password === teacherCredentials.password
-        ) {
-          // Successful login
-          isTeacherLoggedIn = true;
-          loginAttempts = 0; // Reset attempts on successful login
+        try {
+          let loginSuccess = false;
+          let sessionToken = null;
 
-          hideTeacherLogin();
-          showTeacherPanel();
-
-          // Success message
-          alert(
-            `✅ Giriş başarılı!\n\nHoş geldiniz, ${teacherCredentials.username}!\n\nÖğretmen paneline yönlendiriliyorsunuz...`
-          );
-        } else {
-          // Failed login
-          loginAttempts++;
-          const remainingAttempts = maxLoginAttempts - loginAttempts;
-
-          if (remainingAttempts > 0) {
-            showLoginError(
-              `❌ Hatalı kullanıcı adı veya şifre!\n\nKalan deneme hakkı: ${remainingAttempts}`
-            );
-            updateRemainingAttempts();
-
-            // Clear password field for security
-            document.getElementById('teacherPassword').value = '';
-            document.getElementById('teacherPassword').focus();
-          } else {
-            showLoginError(
-              '❌ Maksimum giriş denemesi aşıldı!\n\nGüvenlik nedeniyle giriş engellenmiştir.'
-            );
-
-            // Disable login form
-            document.getElementById('teacherUsername').disabled = true;
-            document.getElementById('teacherPassword').disabled = true;
-
-            // Auto close after 3 seconds
-            setTimeout(() => {
-              hideTeacherLogin();
-              // Reset for next session
-              document.getElementById('teacherUsername').disabled = false;
-              document.getElementById('teacherPassword').disabled = false;
-              loginAttempts = 0;
-              updateRemainingAttempts();
-            }, 3000);
+          if (useSupabase && isSupabaseConfigured) {
+            // Try Supabase login first
+            try {
+              const loginResult = await SupabaseHelper.teachers.login(username, password);
+              if (loginResult && loginResult.session) {
+                sessionToken = loginResult.session.session_token;
+                loginSuccess = true;
+                console.log('✅ Supabase öğretmen girişi başarılı');
+              }
+            } catch (supabaseError) {
+              console.log('❌ Supabase giriş hatası, yerel kimlik doğrulamaya geçiliyor:', supabaseError.message);
+              // Fall back to local authentication
+            }
           }
+
+          // Local authentication fallback
+          if (!loginSuccess) {
+            if (
+              username === teacherCredentials.username &&
+              password === teacherCredentials.password
+            ) {
+              loginSuccess = true;
+              console.log('✅ Yerel öğretmen girişi başarılı');
+            }
+          }
+
+          if (loginSuccess) {
+            // Successful login
+            loginAttempts = 0; // Reset attempts on successful login
+
+            // Save session
+            saveTeacherSession(username, sessionToken);
+
+            hideTeacherLogin();
+            showTeacherPanel();
+
+            // Success message
+            alert(
+              `✅ Giriş başarılı!\n\nHoş geldiniz, ${username}!\n\nÖğretmen paneline yönlendiriliyorsunuz...`
+            );
+          } else {
+            // Failed login
+            loginAttempts++;
+            const remainingAttempts = maxLoginAttempts - loginAttempts;
+
+            if (remainingAttempts > 0) {
+              showLoginError(
+                `❌ Hatalı kullanıcı adı veya şifre!\n\nKalan deneme hakkı: ${remainingAttempts}`
+              );
+              updateRemainingAttempts();
+
+              // Clear password field for security
+              document.getElementById('teacherPassword').value = '';
+              document.getElementById('teacherPassword').focus();
+            } else {
+              showLoginError(
+                '❌ Maksimum giriş denemesi aşıldı!\n\nGüvenlik nedeniyle giriş engellenmiştir.'
+              );
+
+              // Disable login form
+              document.getElementById('teacherUsername').disabled = true;
+              document.getElementById('teacherPassword').disabled = true;
+
+              // Auto close after 3 seconds
+              setTimeout(() => {
+                hideTeacherLogin();
+                // Reset for next session
+                document.getElementById('teacherUsername').disabled = false;
+                document.getElementById('teacherPassword').disabled = false;
+                loginAttempts = 0;
+                updateRemainingAttempts();
+              }, 3000);
+            }
+          }
+        } catch (error) {
+          console.error('Giriş hatası:', error);
+          showLoginError('Giriş sırasında bir hata oluştu: ' + error.message);
         }
       }
 
-      function teacherLogout() {
+      async function teacherLogout() {
         if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
-          isTeacherLoggedIn = false;
-          loginAttempts = 0;
+          try {
+            // Logout from Supabase if using it
+            if (useSupabase && isSupabaseConfigured && teacherSessionToken) {
+              try {
+                await SupabaseHelper.teachers.logout(teacherSessionToken);
+                console.log('✅ Supabase oturumu sonlandırıldı');
+              } catch (supabaseError) {
+                console.error('Supabase çıkış hatası:', supabaseError);
+                // Continue with local logout
+              }
+            }
 
-          // Clear any cached data
-          clearTeacherLoginForm();
+            // Clear local session
+            clearTeacherSession();
+            loginAttempts = 0;
 
-          // Hide teacher panel and show user selection
-          hideAllSections();
-          showUserSelection();
+            // Clear any cached data
+            clearTeacherLoginForm();
 
-          alert(
-            'Güvenli çıkış tamamlandı! 🔒\n\nTekrar giriş yapmak için öğretmen panelini seçin.'
-          );
+            // Hide teacher panel and show user selection
+            hideAllSections();
+            showUserSelection();
+
+            alert(
+              '✅ Başarıyla çıkış yaptınız!\n\nAna sayfaya yönlendiriliyorsunuz...'
+            );
+          } catch (error) {
+            console.error('Çıkış hatası:', error);
+            alert('Çıkış sırasında bir hata oluştu: ' + error.message);
+          }
         }
       }
 
@@ -6168,8 +6812,8 @@
       }
 
       // Supabase yapılandırması - Bu değerleri kendi Supabase bilgilerinizle değiştirin
-      const SUPABASE_URL = 'https://gmzdeptaipfacmfdexnd.supabase.co'; // Örnek: 'https://your-project.supabase.co'
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtemRlcHRhaXBmYWNtZmRleG5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3Mzk2NzAsImV4cCI6MjA3MjMxNTY3MH0.uFenHsXWA0esrAoAYJ3MK6UoEW-8uNOc8CzYrJVyt5k'; // Supabase projenizden alacağınız anon key
+      const SUPABASE_URL = 'https://klbgkxnwnbxqxtvxfshe.supabase.co'; // Örnek: 'https://your-project.supabase.co'
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsYmdreG53bmJ4cXh0dnhmc2hlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2MzM1ODAsImV4cCI6MjA3MjIwOTU4MH0.nababKyMKhOxgb-zP8R_Ho1GaCBW3fprc1_BKk7H4oE'; // Supabase projenizden alacağınız anon key
 
       // Supabase client'ını başlat (sadece geçerli URL ve key varsa)
       let supabase = null;
