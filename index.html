@@ -6823,20 +6823,7 @@
           return supabase;
       }
 
-      // LocalStorage'dan Supabase'e veri taşıma fonksiyonu
-      async function verileriSupabaseeTasi() {
-          try {
-              console.log('🔄 LocalStorage verilerini Supabase\'e taşıma işlemi başlatılıyor...');
-              
-              // Supabase client'ını harici konfigürasyondan al
-              supabase = getSupabaseClientFromConfig();
-              
-              // Supabase client kontrolü
-              if (!supabase) {
-                  console.log('⚠️ Supabase yapılandırması tamamlanmamış. supabase-config.js dosyasını kontrol edin.');
-                  return;
-              }
-              
+     
               // LocalStorage'dan veriyi al
               const localStorageData = localStorage.getItem('yapilacaklar');
               
@@ -6899,22 +6886,7 @@
       }
 
       // Initialize the application when page loads
-      window.onload = function() {
-        init(); // Mevcut init fonksiyonunu çalıştır
-        verileriSupabaseeTasi(); // Supabase migration fonksiyonunu çalıştır
-      };
-    </script>
-    <script>
-      (function () {
-        function c() {
-          var b = a.contentDocument || a.contentWindow.document;
-          if (b) {
-            var d = b.createElement('script');
-            d.innerHTML =
-              "window.__CF$cv$params={r:'9777e10057d9e325',t:'MTc1NjU5NDU2MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
-            b.getElementsByTagName('head')[0].appendChild(d);
-          }
-        }
+      
         if (document.body) {
           var a = document.createElement('iframe');
           a.height = 1;
