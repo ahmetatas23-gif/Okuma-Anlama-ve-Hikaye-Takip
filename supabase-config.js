@@ -127,9 +127,7 @@ const SupabaseHelper = {
             return { data: true, error: null };
         }
     }
-};
-,
-
+},
     // Öğretmen işlemleri
     teachers: {
         // Öğretmen giriş
