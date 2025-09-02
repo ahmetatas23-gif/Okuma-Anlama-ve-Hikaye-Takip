@@ -128,6 +128,7 @@ const SupabaseHelper = {
         }
     }
 },
+    
     // Öğretmen işlemleri
     teachers: {
         // Öğretmen giriş
