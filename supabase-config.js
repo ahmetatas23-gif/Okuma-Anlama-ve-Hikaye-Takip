@@ -33,7 +33,7 @@ function getSupabaseClient() {
     return supabaseClient;
 }
 
-// Supabase Helper fonksiyonları (GÜNCELLENMİŞ VE DÜZELTİLMİŞ HALİ)
+// Supabase Helper fonksiyonları (DÜZELTİLMİŞ HALİ)
 const SupabaseHelper = {
     // Öğrenci işlemleri
     students: {
@@ -125,7 +125,7 @@ const SupabaseHelper = {
             return { data: true, error: null };
         }
     }
-}; // <-- Hatanın kaynağı muhtemelen buradaki eksik noktalı virgüldü.
+};
 
 // Sayfa yüklendiğinde Supabase'i başlat
 document.addEventListener('DOMContentLoaded', function() {
