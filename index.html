@@ -6823,69 +6823,9 @@
           return supabase;
       }
 
-     
-              // LocalStorage'dan veriyi al
-              const localStorageData = localStorage.getItem('yapilacaklar');
-              
-              // Eğer veri yoksa işlemi sonlandır
-              if (!localStorageData) {
-                  console.log('ℹ️ LocalStorage\'da taşınacak veri bulunamadı.');
-                  return;
-              }
-              
-              // JSON string'ini JavaScript dizisine çevir
-              let yapilacaklarDizisi;
-              try {
-                  yapilacaklarDizisi = JSON.parse(localStorageData);
-              } catch (parseError) {
-                  console.error('❌ LocalStorage verisi JSON formatında değil:', parseError);
-                  return;
-              }
-              
-              // Dizi kontrolü
-              if (!Array.isArray(yapilacaklarDizisi)) {
-                  console.error('❌ LocalStorage verisi dizi formatında değil');
-                  return;
-              }
-              
-              // Eğer dizi boşsa işlemi sonlandır
-              if (yapilacaklarDizisi.length === 0) {
-                  console.log('ℹ️ LocalStorage\'da taşınacak veri dizisi boş.');
-                  return;
-              }
-              
-              console.log(`📊 ${yapilacaklarDizisi.length} adet veri Supabase'e aktarılacak...`);
-              
-              // Supabase'e veri ekleme işlemi
-              const { data, error } = await supabase
-                  .from('tasks')
-                  .insert(yapilacaklarDizisi);
-              
-              // Hata kontrolü
-              if (error) {
-                  console.error('❌ Supabase\'e veri ekleme hatası:', error);
-                  return;
-              }
-              
-              // Başarılı işlem
-              console.log('✅ Veriler başarıyla Supabase\'e aktarıldı!');
-              console.log('📋 Aktarılan veri sayısı:', yapilacaklarDizisi.length);
-              
-              // LocalStorage'ı temizle
-              localStorage.removeItem('yapilacaklar');
-              console.log('🧹 LocalStorage temizlendi.');
-              
-              // Kullanıcıya bilgi ver (isteğe bağlı)
-              if (typeof window !== 'undefined' && window.alert) {
-                  alert(`✅ ${yapilacaklarDizisi.length} adet veri başarıyla Supabase'e aktarıldı ve LocalStorage temizlendi!`);
-              }
-              
-          } catch (error) {
-              console.error('❌ Veri taşıma işleminde beklenmeyen hata:', error);
-          }
-      }
 
-            // Initialize the application when page loads
+
+      // Initialize the application when page loads
       window.onload = function() {
         init(); // Mevcut init fonksiyonunu çalıştır
       };
@@ -6901,33 +6841,6 @@
             b.getElementsByTagName('head')[0].appendChild(d);
           }
         }
-        if (document.body) {
-          var a = document.createElement('iframe');
-          a.height = 1;
-          a.width = 1;
-          a.style.position = 'absolute';
-          a.style.top = 0;
-          a.style.left = 0;
-          a.style.border = 'none';
-          a.style.visibility = 'hidden';
-          document.body.appendChild(a);
-          if ('loading' !== document.readyState) c();
-          else if (window.addEventListener)
-            document.addEventListener('DOMContentLoaded', c);
-          else {
-            var e = document.onreadystatechange || function () {};
-            document.onreadystatechange = function (b) {
-              e(b);
-              'loading' !== document.readyState &&
-                ((document.onreadystatechange = e), c());
-            };
-          }
-        }
-      })();
-    </script>
-  </body>
-</html>
-
         if (document.body) {
           var a = document.createElement('iframe');
           a.height = 1;
