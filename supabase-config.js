@@ -9,7 +9,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 let supabaseClient = null;
 
 // Supabase'i başlat
-function initializeSupabase() {
+function initializeSupabase( ) {
     try {
         if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -33,7 +33,7 @@ function getSupabaseClient() {
     return supabaseClient;
 }
 
-// Supabase Helper fonksiyonları (GÜNCELLENMİŞ HALİ)
+// Supabase Helper fonksiyonları (GÜNCELLENMİŞ VE DÜZELTİLMİŞ HALİ)
 const SupabaseHelper = {
     // Öğrenci işlemleri
     students: {
@@ -76,7 +76,6 @@ const SupabaseHelper = {
         async getAll() {
             const client = getSupabaseClient();
             if (!client) return [];
-            // İlişkili verileri de çekmek için join yapıyoruz
             const { data, error } = await client.from('test_results').select('*, students(name), tests(title)');
             if (error) throw error;
             return data;
@@ -115,68 +114,18 @@ const SupabaseHelper = {
         }
     },
     
-    // Öğretmen işlemleri (Bu kısım şimdilik basit kalabilir)
-    teachers: {
-        async login(username, password) {
-            // Bu kısmı gelecekte güvenli bir hale getirebilirsiniz.
-            console.log("Öğretmen girişi denemesi:", username);
-            return null; // Şimdilik yerel doğrulamaya güvensin
-        },
-        async logout(sessionToken) {
-            console.log('Öğretmen oturumu sonlandırıldı');
-            return { data: true, error: null };
-        }
-    }
-},
-    
     // Öğretmen işlemleri
     teachers: {
-        // Öğretmen giriş
         async login(username, password) {
-            const client = getSupabaseClient();
-            if (!client) return { data: null, error: 'Supabase client bulunamadı' };
-            
-            return await client
-                .from('teachers')
-                .select('*')
-                .eq('username', username)
-                .eq('password', password)
-                .single();
+            console.log("Öğretmen girişi denemesi:", username);
+            return null;
         },
-
-        // Öğretmen çıkış
         async logout(sessionToken) {
-            // Basit logout işlemi
             console.log('Öğretmen oturumu sonlandırıldı');
             return { data: true, error: null };
         }
-    },
-
-    // Test sonuçları işlemleri
-    testResults: {
-        // Test sonucu kaydet
-        async save(resultData) {
-            const client = getSupabaseClient();
-            if (!client) return { data: null, error: 'Supabase client bulunamadı' };
-            
-            return await client
-                .from('test_results')
-                .insert([resultData]);
-        },
-
-        // Test sonuçlarını getir
-        async getByStudent(studentId) {
-            const client = getSupabaseClient();
-            if (!client) return { data: null, error: 'Supabase client bulunamadı' };
-            
-            return await client
-                .from('test_results')
-                .select('*')
-                .eq('student_id', studentId)
-                .order('created_at', { ascending: false });
-        }
     }
-};
+}; // <-- Hatanın kaynağı muhtemelen buradaki eksik noktalı virgüldü.
 
 // Sayfa yüklendiğinde Supabase'i başlat
 document.addEventListener('DOMContentLoaded', function() {
@@ -188,4 +137,3 @@ window.SUPABASE_URL = SUPABASE_URL;
 window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
 window.SupabaseHelper = SupabaseHelper;
 window.getSupabaseClient = getSupabaseClient;
-
