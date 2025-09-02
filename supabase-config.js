@@ -2,8 +2,8 @@
 // Bu dosya Okuma Anlama ve Hikaye Takip Platformu için Supabase bağlantı ayarlarını içerir
 
 // Supabase proje bilgileri
-const SUPABASE_URL = 'https://klbgkxnwnbxqxtvxfshe.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsYmdreG53bmJ4cXh0dnhmc2hlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2MzM1ODAsImV4cCI6MjA3MjIwOTU4MH0.nababKyMKhOxgb-zP8R_Ho1GaCBW3fprc1_BKk7H4oE';
+const SUPABASE_URL = 'https://gmzdeptaipfacmfdexnd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtemRlcHRhaXBmYWNtZmRleG5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3Mzk2NzAsImV4cCI6MjA3MjMxNTY3MH0.uFenHsXWA0esrAoAYJ3MK6UoEW-8uNOc8CzYrJVyt5k';
 
 // Supabase client'ını oluştur
 let supabaseClient = null;
