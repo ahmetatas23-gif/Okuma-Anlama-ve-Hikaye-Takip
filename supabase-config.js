@@ -33,79 +33,102 @@ function getSupabaseClient() {
     return supabaseClient;
 }
 
-// Supabase Helper fonksiyonları
+// Supabase Helper fonksiyonları (GÜNCELLENMİŞ HALİ)
 const SupabaseHelper = {
-    // Görev (task) işlemleri
-    tasks: {
-        // Tüm görevleri getir
-        async getAll() {
-            const client = getSupabaseClient();
-            if (!client) return { data: null, error: 'Supabase client bulunamadı' };
-            
-            return await client
-                .from('tasks')
-                .select('*')
-                .order('created_at', { ascending: false });
-        },
-
-        // Yeni görev ekle
-        async add(task) {
-            const client = getSupabaseClient();
-            if (!client) return { data: null, error: 'Supabase client bulunamadı' };
-            
-            return await client
-                .from('tasks')
-                .insert([task]);
-        },
-
-        // Görev güncelle
-        async update(id, updates) {
-            const client = getSupabaseClient();
-            if (!client) return { data: null, error: 'Supabase client bulunamadı' };
-            
-            return await client
-                .from('tasks')
-                .update(updates)
-                .eq('id', id);
-        },
-
-        // Görev sil
-        async delete(id) {
-            const client = getSupabaseClient();
-            if (!client) return { data: null, error: 'Supabase client bulunamadı' };
-            
-            return await client
-                .from('tasks')
-                .delete()
-                .eq('id', id);
-        }
-    },
-
     // Öğrenci işlemleri
     students: {
-        // Öğrenci kaydet
-        async register(studentData) {
+        async getAll() {
             const client = getSupabaseClient();
-            if (!client) return { data: null, error: 'Supabase client bulunamadı' };
-            
-            return await client
-                .from('students')
-                .insert([studentData]);
+            if (!client) return [];
+            const { data, error } = await client.from('students').select('*');
+            if (error) throw error;
+            return data;
         },
-
-        // Öğrenci giriş
-        async login(username, password) {
+        async create(studentData) {
             const client = getSupabaseClient();
-            if (!client) return { data: null, error: 'Supabase client bulunamadı' };
-            
-            return await client
-                .from('students')
-                .select('*')
-                .eq('username', username)
-                .eq('password', password)
-                .single();
+            if (!client) throw new Error('Supabase client bulunamadı');
+            const { data, error } = await client.from('students').insert([studentData]).select().single();
+            if (error) throw error;
+            return data;
         }
     },
+
+    // Test işlemleri
+    tests: {
+        async getAll() {
+            const client = getSupabaseClient();
+            if (!client) return [];
+            const { data, error } = await client.from('tests').select('*');
+            if (error) throw error;
+            return data;
+        },
+        async create(testData) {
+            const client = getSupabaseClient();
+            if (!client) throw new Error('Supabase client bulunamadı');
+            const { data, error } = await client.from('tests').insert([testData]).select().single();
+            if (error) throw error;
+            return data;
+        }
+    },
+
+    // Test sonuçları işlemleri
+    testResults: {
+        async getAll() {
+            const client = getSupabaseClient();
+            if (!client) return [];
+            // İlişkili verileri de çekmek için join yapıyoruz
+            const { data, error } = await client.from('test_results').select('*, students(name), tests(title)');
+            if (error) throw error;
+            return data;
+        },
+        async assignTest(studentId, testId) {
+            const client = getSupabaseClient();
+            if (!client) throw new Error('Supabase client bulunamadı');
+            const { data, error } = await client.from('test_results').insert([{ student_id: studentId, test_id: testId }]).select().single();
+            if (error) throw error;
+            return data;
+        },
+        async update(resultId, updates) {
+            const client = getSupabaseClient();
+            if (!client) throw new Error('Supabase client bulunamadı');
+            const { data, error } = await client.from('test_results').update(updates).eq('id', resultId).select().single();
+            if (error) throw error;
+            return data;
+        }
+    },
+
+    // Öğrenci profili işlemleri
+    studentProfiles: {
+        async create(profileData) {
+            const client = getSupabaseClient();
+            if (!client) throw new Error('Supabase client bulunamadı');
+            const { data, error } = await client.from('student_profiles').insert([profileData]).select().single();
+            if (error) throw error;
+            return data;
+        },
+        async update(studentId, updates) {
+            const client = getSupabaseClient();
+            if (!client) throw new Error('Supabase client bulunamadı');
+            const { data, error } = await client.from('student_profiles').update(updates).eq('student_id', studentId).select().single();
+            if (error) throw error;
+            return data;
+        }
+    },
+    
+    // Öğretmen işlemleri (Bu kısım şimdilik basit kalabilir)
+    teachers: {
+        async login(username, password) {
+            // Bu kısmı gelecekte güvenli bir hale getirebilirsiniz.
+            console.log("Öğretmen girişi denemesi:", username);
+            return null; // Şimdilik yerel doğrulamaya güvensin
+        },
+        async logout(sessionToken) {
+            console.log('Öğretmen oturumu sonlandırıldı');
+            return { data: true, error: null };
+        }
+    }
+};
+,
 
     // Öğretmen işlemleri
     teachers: {
