@@ -6811,14 +6811,16 @@
         );
       }
 
-      // Supabase yapılandırması - Bu değerleri kendi Supabase bilgilerinizle değiştirin
-      const SUPABASE_URL = 'https://klbgkxnwnbxqxtvxfshe.supabase.co'; // Örnek: 'https://your-project.supabase.co'
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsYmdreG53bmJ4cXh0dnhmc2hlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2MzM1ODAsImV4cCI6MjA3MjIwOTU4MH0.nababKyMKhOxgb-zP8R_Ho1GaCBW3fprc1_BKk7H4oE'; // Supabase projenizden alacağınız anon key
-
-      // Supabase client'ını başlat (sadece geçerli URL ve key varsa)
+      // Supabase yapılandırması artık supabase-config.js dosyasından yükleniyor
+      // Supabase client'ı harici dosyadan alınacak
       let supabase = null;
-      if (SUPABASE_URL !== 'YOUR_SUPABASE_URL_HERE' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY_HERE') {
-          supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      
+      // Supabase client'ını harici dosyadan al
+      function getSupabaseClientFromConfig() {
+          if (window.getSupabaseClient) {
+              supabase = window.getSupabaseClient();
+          }
+          return supabase;
       }
 
       // LocalStorage'dan Supabase'e veri taşıma fonksiyonu
@@ -6826,9 +6828,12 @@
           try {
               console.log('🔄 LocalStorage verilerini Supabase\'e taşıma işlemi başlatılıyor...');
               
+              // Supabase client'ını harici konfigürasyondan al
+              supabase = getSupabaseClientFromConfig();
+              
               // Supabase client kontrolü
               if (!supabase) {
-                  console.log('⚠️ Supabase yapılandırması tamamlanmamış. SUPABASE_URL ve SUPABASE_ANON_KEY değerlerini güncelleyin.');
+                  console.log('⚠️ Supabase yapılandırması tamamlanmamış. supabase-config.js dosyasını kontrol edin.');
                   return;
               }
               
